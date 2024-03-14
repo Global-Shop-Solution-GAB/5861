@@ -1,0 +1,408 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.f_Main..Create(BaseForm)
+Gui.f_Main..Caption("Vendor RFQ Upload")
+Gui.f_Main..Size(527,294)
+Gui.f_Main..MinX(0)
+Gui.f_Main..MinY(0)
+Gui.f_Main..Position(0,0)
+Gui.f_Main..AlwaysOnTop(False)
+Gui.f_Main..FontName("Tahoma")
+Gui.f_Main..FontSize(8.25)
+Gui.f_Main..ControlBox(True)
+Gui.f_Main..MaxButton(False)
+Gui.f_Main..MinButton(True)
+Gui.f_Main..MousePointer(0)
+Gui.f_Main..Moveable(True)
+Gui.f_Main..Sizeable(False)
+Gui.f_Main..ShowInTaskBar(True)
+Gui.f_Main..TitleBar(True)
+Gui.f_Main..Event(UnLoad,f_Main_UnLoad)
+Gui.f_Main.GsGcRFQFile.Create(GsGridControl)
+Gui.f_Main.GsGcRFQFile.Enabled(True)
+Gui.f_Main.GsGcRFQFile.Visible(True)
+Gui.f_Main.GsGcRFQFile.Zorder(0)
+Gui.f_Main.GsGcRFQFile.Size(512,158)
+Gui.f_Main.GsGcRFQFile.Position(6,92)
+Gui.f_Main.lblFilePath.Create(Label,"RFQ Excel File Location:",True,115,13,0,7,8,True,0,"Tahoma",8.25,,0,0)
+Gui.f_Main.lblFilePath.BorderStyle(0)
+Gui.f_Main.txtRFQFilePath.Create(TextBox,"",True,477,20,0,7,27,True,0,"Tahoma",8.25,,1)
+Gui.f_Main.cmdBrowse.Create(Button)
+Gui.f_Main.cmdBrowse.Enabled(True)
+Gui.f_Main.cmdBrowse.Visible(True)
+Gui.f_Main.cmdBrowse.Zorder(0)
+Gui.f_Main.cmdBrowse.Size(26,20)
+Gui.f_Main.cmdBrowse.Position(492,27)
+Gui.f_Main.cmdBrowse.Caption("^")
+Gui.f_Main.cmdBrowse.FontName("Tahoma")
+Gui.f_Main.cmdBrowse.FontSize(8.25)
+Gui.f_Main.cmdBrowse.Event(Click,cmdBrowse_Click)
+Gui.f_Main.cmdAdd.Create(Button)
+Gui.f_Main.cmdAdd.Enabled(True)
+Gui.f_Main.cmdAdd.Visible(True)
+Gui.f_Main.cmdAdd.Zorder(0)
+Gui.f_Main.cmdAdd.Size(75,23)
+Gui.f_Main.cmdAdd.Position(7,58)
+Gui.f_Main.cmdAdd.Caption("Add")
+Gui.f_Main.cmdAdd.FontName("Tahoma")
+Gui.f_Main.cmdAdd.FontSize(8.25)
+Gui.f_Main.cmdAdd.Event(Click,cmdAdd_Click)
+Gui.f_Main.cmdRemove.Create(Button)
+Gui.f_Main.cmdRemove.Enabled(True)
+Gui.f_Main.cmdRemove.Visible(True)
+Gui.f_Main.cmdRemove.Zorder(0)
+Gui.f_Main.cmdRemove.Size(75,23)
+Gui.f_Main.cmdRemove.Position(95,58)
+Gui.f_Main.cmdRemove.Caption("Remove")
+Gui.f_Main.cmdRemove.FontName("Tahoma")
+Gui.f_Main.cmdRemove.FontSize(8.25)
+Gui.f_Main.cmdRemove.Event(Click,cmdRemove_Click)
+Gui.f_Main.cmdClear.Create(Button)
+Gui.f_Main.cmdClear.Enabled(True)
+Gui.f_Main.cmdClear.Visible(True)
+Gui.f_Main.cmdClear.Zorder(0)
+Gui.f_Main.cmdClear.Size(75,23)
+Gui.f_Main.cmdClear.Position(183,58)
+Gui.f_Main.cmdClear.Caption("Clear Grid")
+Gui.f_Main.cmdClear.FontName("Tahoma")
+Gui.f_Main.cmdClear.FontSize(8.25)
+Gui.f_Main.cmdClear.Event(Click,cmdClear_Click)
+Gui.f_Main.cmdUpload.Create(Button)
+Gui.f_Main.cmdUpload.Enabled(True)
+Gui.f_Main.cmdUpload.Visible(True)
+Gui.f_Main.cmdUpload.Zorder(0)
+Gui.f_Main.cmdUpload.Size(75,23)
+Gui.f_Main.cmdUpload.Position(443,58)
+Gui.f_Main.cmdUpload.Caption("Upload File")
+Gui.f_Main.cmdUpload.FontName("Tahoma")
+Gui.f_Main.cmdUpload.FontSize(8.25)
+Gui.f_Main.cmdUpload.Event(Click,cmdUpload_Click)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+V.Global.bError.Declare(Boolean)
+V.Global.bUnattended.Declare(Boolean)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.Try
+Function.Intrinsic.UI.UsePixels ' Allows you to use Pixels instead of Twips throughout
+F.ODBC.Connection!con.OpenConnection(V.Ambient.PDSN, V.Ambient.PUser, V.Ambient.PPass)
+F.Intrinsic.Control.CallSub(LoadGrid)
+F.Intrinsic.Control.CallSub(FormatGrid)
+Gui.f_Main..Show
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "Subroutine", V.Ambient.CurrentSubroutine, "UNATTENDED", V.Global.bUnattended, "Project", "5861", "ProjectTitle", "Vendor RFQ Upload", "Callback", "f_Main_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.LoadGrid.Start
+F.Intrinsic.Control.Try
+
+F.Data.Datatable.Create("dtRFQ", True)
+F.Data.Datatable.AddColumn("dtRFQ", "LINE", "STRING")
+F.Data.Datatable.AddColumn("dtRFQ", "DOCUMENT", "STRING")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "Subroutine", V.Ambient.CurrentSubroutine, "UNATTENDED", V.Global.bUnattended, "Project", "5861", "ProjectTitle", "Vendor RFQ Upload", "Callback", "f_Main_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadGrid.End
+
+Program.Sub.FormatGrid.Start
+F.Intrinsic.Control.Try
+V.Local.sDefault.Declare(String)
+V.Local.sGV.Declare(String)
+V.Local.sProperty.Declare(String)
+
+Gui.f_Main.GsGcRFQFile.SuspendLayout
+Gui.f_Main.GsGcRFQFile.AddGridviewFromDatatable("gvRFQ", "dtRFQ")
+V.Local.sGV.Set("gvRFQ")
+
+Gui.f_Main.GsGcRFQFile.SetGridviewProperty(V.Local.sGV,"AllowColumnResizing", False)
+Gui.f_Main.GsGcRFQFile.SetGridviewProperty(V.Local.sGV, "AllowColumnMoving", False)
+Gui.f_Main.GsGcRFQFile.SetGridviewProperty(V.Local.sGV, "Showgrouppanel", False)
+Gui.f_Main.GsGcRFQFile.SetGridviewProperty(V.Local.sGV, "AllowAddRows", False)
+Gui.f_Main.GsGcRFQFile.SetGridviewProperty(V.Local.sGV, "AllowDeleteRows", False)
+Gui.f_Main.GsGcRFQFile.SetGridviewProperty(V.Local.sGV, "OptionsViewColumnAutoWidth", True)
+
+V.Local.sProperty.Set("Caption")
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(V.Local.sGV,"LINE", V.Local.sProperty, "Line")
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(v.Local.sGV, "DOCUMENT", V.Local.sProperty, "Document")
+
+V.Local.sProperty.Set("HeaderFontBold")
+V.Local.sDefault.Set("True")
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(V.Local.sGV,"LINE", V.Local.sProperty, V.Local.sDefault)
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(v.Local.sGV, "DOCUMENT", V.Local.sProperty, V.Local.sDefault)
+
+V.Local.sProperty.Set("MinWidth")
+V.Local.sDefault.Set(100)
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(V.Local.sGV,"LINE", V.Local.sProperty, 35)
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(v.Local.sGV, "DOCUMENT", V.Local.sProperty, 350)
+
+V.Local.sProperty.Set("ReadOnly")
+V.Local.sDefault.Set("True")
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(V.Local.sGV,"LINE", V.Local.sProperty, V.Local.sDefault)
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(v.Local.sGV, "DOCUMENT", V.Local.sProperty, V.Local.sDefault)
+
+V.Local.sProperty.Set("AllowEdit")
+V.Local.sDefault.Set("False")
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(V.Local.sGV,"LINE", V.Local.sProperty, V.Local.sDefault)
+Gui.f_Main.GsGcRFQFile.SetColumnProperty(v.Local.sGV, "DOCUMENT", V.Local.sProperty, V.Local.sDefault)
+
+Gui.f_Main.GsGcRFQFile.ResumeLayout
+Gui.f_Main.GsGcRFQFile.MainView("gvRFQ")
+
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "Subroutine", V.Ambient.CurrentSubroutine, "UNATTENDED", V.Global.bUnattended, "Project", "5861", "ProjectTitle", "Vendor RFQ Upload", "Callback", "f_Main_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.FormatGrid.End
+
+Program.Sub.cmdBrowse_Click.Start
+F.Intrinsic.Control.Try
+V.Local.iRet.Declare(Long)
+
+'get file path for document and then attach automatically without going through doc control screen
+'invoke open file dialogue
+V.Local.sFile.Declare(String)
+
+'Browse for file to upload from
+F.Intrinsic.UI.ShowOpenFileDialog("","",,V.Local.sFile)
+F.Intrinsic.Control.If(V.Local.sFile,<>,"***CANCEL***")
+'set textbox to sFile
+Gui.f_Main.txtRFQFilePath.Text(V.Local.sFile.Trim)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "Subroutine", V.Ambient.CurrentSubroutine, "UNATTENDED", V.Global.bUnattended, "Project", "5861", "ProjectTitle", "Vendor RFQ Upload", "Callback", "f_Main_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdBrowse_Click.End
+
+Program.Sub.cmdAdd_Click.Start
+F.Intrinsic.Control.Try
+V.Local.iCnt.Declare(Long)
+V.Local.iLineCnt.Declare(Long)
+V.Local.sDocPath.Declare(String)
+
+V.Local.sDocPath.Set(V.Screen.f_Main!txtRFQFilePath.Text)
+F.Intrinsic.Control.If(V.Local.sDocPath.Trim,<>,"")
+	F.Intrinsic.Control.If(V.DataTable.dtRFQ.RowCount--,>,-1)
+		F.Intrinsic.Control.For(V.Local.iCnt,0,V.DataTable.dtRFQ.RowCount--,1)
+			V.Local.iLineCnt.Set(V.DataTable.dtRFQ(V.Local.iCnt).LINE!FieldVal)
+			F.Intrinsic.Math.Add(V.Local.iLineCnt,1,V.Local.iLineCnt)
+		F.Intrinsic.Control.Next(V.Local.iCnt)
+	F.Intrinsic.Control.Else
+		V.Local.iLineCnt.Set(1)
+	F.Intrinsic.Control.EndIf
+	F.Data.Datatable.AddRow("dtRFQ", "LINE", V.Local.iLineCnt, "DOCUMENT", V.Local.sDocPath.Trim)
+	Gui.f_Main.txtRFQFilePath.Text("")
+F.Intrinsic.Control.Else
+	F.Intrinsic.UI.Msgbox("Document Path Required!", "Required Field")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "Subroutine", V.Ambient.CurrentSubroutine, "UNATTENDED", V.Global.bUnattended, "Project", "5861", "ProjectTitle", "Vendor RFQ Upload", "Callback", "f_Main_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdAdd_Click.End
+
+Program.Sub.cmdRemove_Click.Start
+F.Intrinsic.Control.Try
+V.Local.iRet.Declare(Long)
+V.Local.sSelLine.Declare(String)
+V.Local.sSelRows.Declare(String)
+V.Local.sMessage.Declare(String)
+
+Gui.f_Main.GsGcRFQFile.GetSelectedRows("gvRFQ", V.Local.sSelRows)
+Gui.f_Main.GsGcRFQFile.GetCellValueByColumnName("gvRFQ", "LINE", V.Local.sSelRows.Long, V.Local.sSelLine)
+
+F.Intrinsic.String.Build("Are you sure you want to remove the document on line {0}?",V.Local.sSelLine.Trim, V.Local.sMessage)
+F.Intrinsic.UI.Msgbox(V.Local.sMessage, "Warning", 4, V.Local.iRet)
+F.Intrinsic.Control.If(V.Local.iRet,=,6)
+	F.Data.Datatable.DeleteRow("dtRFQ",V.Local.sSelRows.Long )
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "Subroutine", V.Ambient.CurrentSubroutine, "UNATTENDED", V.Global.bUnattended, "Project", "5861", "ProjectTitle", "Vendor RFQ Upload", "Callback", "f_Main_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdRemove_Click.End
+
+Program.Sub.cmdClear_Click.Start
+F.Intrinsic.Control.Try
+V.Local.iRet.Declare(Long)
+
+F.Intrinsic.Control.If(V.DataTable.dtRFQ.RowCount--,>,-1)
+	F.Intrinsic.UI.Msgbox("Are you sure you want to remove all of the documents?", "Warning", 4, V.Local.iRet)
+	F.Intrinsic.Control.If(V.Local.iRet,=,6)
+		F.Data.Datatable.DeleteRow("dtRFQ")
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.Else
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "Subroutine", V.Ambient.CurrentSubroutine, "UNATTENDED", V.Global.bUnattended, "Project", "5861", "ProjectTitle", "Vendor RFQ Upload", "Callback", "f_Main_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdClear_Click.End
+
+Program.Sub.cmdUpload_Click.Start
+F.Intrinsic.Control.Try
+V.Local.iDocCnt.Declare(Long)
+v.Local.iLen.Declare(Long)
+V.Local.iLoopCnt.Declare(Long)
+V.Local.iRowCnt.Declare(Long)
+V.Local.iRow.Declare(Long)
+V.Local.iWorksheetCounter.Declare(Long)
+V.Local.sExcelRowData.Declare(String)
+V.Local.sDoc.Declare(String)
+V.Local.sPart.Declare(String)
+V.Local.sDesc.Declare(String)
+V.Local.sQty.Declare(String)
+V.Local.sVendor.Declare(String)
+V.Local.sSort.Declare(String)
+V.Local.sSEQ.Declare(String)
+V.Local.sReqDate.Declare(String)
+V.Local.sPromiseDate.Declare(String)
+V.Local.sPrice.Declare(String)
+V.Local.sSQL.Declare(String)
+V.Local.sShortPart.Declare(String)
+
+V.Local.iRow.Set(2)
+V.Local.iWorksheetCounter.Set(1)
+
+Gui.f_Main..Visible(False)
+F.Intrinsic.UI.InvokeWaitDialog("Uploading files...")
+
+F.Intrinsic.Control.For(V.Local.iDocCnt,0,V.DataTable.dtRFQ.RowCount--,1)
+	V.Local.iLoopCnt.Set(1)
+	V.Local.sDoc.Set(V.DataTable.dtRFQ(V.Local.iDocCnt).DOCUMENT!FieldValTrim)
+	F.Intrinsic.Control.If(V.Local.iLoopCnt,>,0)
+		F.Automation.MSExcel.CreateAppObject("MSExcel")
+		F.Automation.MSExcel.OpenWorkbook("MSExcel", "Guide Tree", V.Local.sDoc)
+		F.Automation.MSExcel.OpenWorksheet("Guide Tree", "Guide Sheet", V.Local.iWorksheetCounter)
+		
+		F.Automation.MSExcel.RowCount("Guide Sheet", V.Local.iRowCnt)
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.Control.For(V.Local.iRow,2, V.Local.iRowCnt, 1)
+		F.Intrinsic.Control.If(V.Local.iLoopCnt,=,0)
+			F.Automation.MSExcel.CreateAppObject("MSExcel")
+			F.Automation.MSExcel.OpenWorkbook("MSExcel", "Guide Tree", V.Local.sDoc)
+			F.Automation.MSExcel.OpenWorksheet("Guide Tree", "Guide Sheet", V.Local.iWorksheetCounter)
+		F.Intrinsic.Control.EndIf
+		
+		'reads the row data in the excel spreadsheet
+		F.Automation.MSExcel.ReadRow("Guide Sheet", V.Local.iRow, 1, 9,V.Local.sExcelRowData)
+		F.Intrinsic.String.Split(V.Local.sExcelRowData,"*!*", V.Local.sExcelRowData)
+		V.Local.sPart.Set(V.Local.sExcelRowData(0))
+		V.Local.sDesc.Set(V.Local.sExcelRowData(1))
+		V.Local.sQty.Set(V.Local.sExcelRowData(2))
+		V.Local.sVendor.Set(V.Local.sExcelRowData(3))
+		F.Intrinsic.String.LPad(V.Local.sVendor,"0",6, V.Local.sVendor)
+		V.Local.sSort.Set(V.Local.sExcelRowData(4))
+		V.Local.sSEQ.Set(V.Local.sExcelRowData(5))
+		F.Intrinsic.String.Replace(V.Local.sSEQ, ".", "",V.Local.sSEQ)
+		F.Intrinsic.String.LPad(V.Local.sSEQ,"0",6, V.Local.sSEQ)
+		V.Local.sReqDate.Set(V.Local.sExcelRowData(6))
+		V.Local.sPromiseDate.Set(V.Local.sExcelRowData(7))
+		V.Local.sPrice.Set(V.Local.sExcelRowData(8))
+		
+		F.Intrinsic.String.Len(V.Local.sPart, V.Local.iLen)
+		F.Intrinsic.Control.If(V.Local.iLen,>,20)
+			F.Global.Inventory.GetGSSPart(V.Local.sPart, "", V.Local.sShortPart)
+			F.Intrinsic.String.Build("UPDATE VEND_QTE_LINES SET UNIT_PRICE = '{0}' WHERE PART = '{1}' AND SEQ = '{2}' AND QUANTITY = '{3}' ", V.Local.sPrice.Trim, V.Local.sShortPart.Trim, V.Local.sSort.Trim, V.Local.sQty.Trim, V.Local.sSQL)
+		F.Intrinsic.Control.Else
+			F.Intrinsic.String.Build("UPDATE VEND_QTE_LINES SET UNIT_PRICE = '{0}' WHERE PART = '{1}' AND SEQ = '{2}' AND QUANTITY = '{3}' ", V.Local.sPrice.Trim, V.Local.sPart, V.Local.sSort.Trim, V.Local.sQty.Trim, V.Local.sSQL)
+		F.Intrinsic.Control.EndIf
+		
+		F.ODBC.Connection!con.Execute(V.Local.sSQL)
+		F.Automation.MSExcel.DestroyAllObjects("MSExcel", "Guide Tree", "Guide Sheet")
+		V.Local.iLoopCnt.Set(0)
+	F.Intrinsic.Control.Next(V.Local.iRow)
+F.Intrinsic.Control.Next(V.Local.iDocCnt)
+
+F.Intrinsic.UI.CloseWaitDialog
+F.Intrinsic.UI.Msgbox("Upload Complete!")
+
+F.Intrinsic.Control.CallSub(f_Main_Unload)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "Subroutine", V.Ambient.CurrentSubroutine, "UNATTENDED", V.Global.bUnattended, "Project", "5861", "ProjectTitle", "Vendor RFQ Upload", "Callback", "f_Main_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdUpload_Click.End
+
+Program.Sub.f_Main_UnLoad.Start
+F.Intrinsic.Control.Try
+F.ODBC.Connection!con.Close
+F.Intrinsic.Control.End
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "Subroutine", V.Ambient.CurrentSubroutine, "UNATTENDED", V.Global.bUnattended, "Project", "5861", "ProjectTitle", "Vendor RFQ Upload", "Callback", "f_Main_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.f_Main_UnLoad.End
+
+Program.Sub.ErrorMessage.Start
+'basic error message for replacing catch block
+'this is really just for when printing the message and ending program
+'pass error number, error description, current subroutine
+'optional callback sub, this will be called before ending
+'optional unattended parameters, those subs may not exist if not using them but won't be called
+F.Intrinsic.Control.Try
+
+V.Local.iError.Declare(Long)
+V.Local.sErrorDescription.Declare(String)
+V.Local.sSubroutine.Declare(String)
+V.Local.sError.Declare(String)
+V.Local.bExists.Declare(Boolean)
+V.Local.sCallback.Declare(String)
+
+V.Local.iError.Set(V.Args.ErrorNumber)
+V.Local.sErrorDescription.Set(V.Args.ErrorDescription)
+V.Local.sSubroutine.Set(V.Args.Subroutine)
+
+'make sure we aren't in an error loop
+F.Intrinsic.Control.If(V.Global.bError)
+	F.Intrinsic.Control.End
+
+F.Intrinsic.Control.EndIf
+V.Global.bError.Set(True)
+
+F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}", V.Caller.ScriptFile, V.Ambient.Newline, V.Local.sSubroutine, V.Local.iError, V.Local.sErrorDescription, V.Ambient.GABVersion, V.Local.sError)
+
+F.Intrinsic.Variable.ArgExists("UNATTENDED", V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists)
+	F.Intrinsic.Control.If(V.Args.UNATTENDED)
+		F.Intrinsic.Control.CallSub(UnattendedErrorMessage, "MESSAGE", V.Local.sError, "PROJECT", V.Args.PROJECT, "PROJECTTITLE", V.Args.PROJECTTITLE)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Else
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Variable.ArgExists("Callback", V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists)
+	V.Local.sCallback.Set(V.Args.Callback.Trim)
+	F.Intrinsic.Control.CallSub(V.Local.sCallback)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+F.Intrinsic.Control.EndTry
+Program.Sub.ErrorMessage.End
+
+Program.Sub.Comments.Start
+${$5$}$3.0.0.0$}$1
+${$6$}$acollins$}$20201016104505535$}$h98hERc2yV72q0GaUGlwSaoK/aefTdVkg+e2yth67TawuUjR1SyqdTa/5VFMw4zjZUS7iflVKNjTIX74NOL9Ug==
+Program.Sub.Comments.End
